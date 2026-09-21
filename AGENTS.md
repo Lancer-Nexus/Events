@@ -21,6 +21,11 @@ Provide predictable lifecycle management for scheduled events and large battles.
 - Store event results and audit data durably.
 - Do not trust client-provided event scores, permissions or participant state.
 
+## Working-model escalation
+
+- If a task requires complex reasoning beyond the current model's reliable scope, ask the user whether switching to a stronger model is desired before continuing.
+- Do not switch models silently or broaden the task because a stronger model may be useful.
+
 ## Verification
 
 Test registration races, event cancellation, late joins, full capacity, server failure, reconnects and return transfers.
