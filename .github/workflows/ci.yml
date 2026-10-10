@@ -10,15 +10,43 @@ permissions:
 jobs:
   dotnet:
     runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp -h 127.0.0.1 -uroot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      LANCER_NEXUS_EVENTS_TEST_MYSQL: Server=127.0.0.1;Port=3306;User ID=root;Database=mysql
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: git submodule update --init --remote --merge Protocol
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet restore
-      - run: dotnet format --verify-no-changes --no-restore
-      - run: dotnet build --configuration Release --no-restore --warnaserror
-      - run: dotnet test --configuration Release --no-build --logger trx --collect:"XPlat Code Coverage"
+      - run: dotnet restore Events.sln
+      - run: >-
+          dotnet format whitespace Events.sln --verify-no-changes --no-restore --include
+          src/LancerNexus.Events.Api/CoordinatorEventServerClient.cs
+          src/LancerNexus.Events.Api/EventServerReservationWorkflow.cs
+          src/LancerNexus.Events.Api/EventServiceCredentialAuthenticator.cs
+          src/LancerNexus.Events.Api/IEventStore.cs
+          src/LancerNexus.Events.Api/MySqlEventStore.cs
+          src/LancerNexus.Events.Api/Program.cs
+          tests/LancerNexus.Events.Tests/CoordinatorEventServerClientTests.cs
+          tests/LancerNexus.Events.Tests/EventServerReservationWorkflowTests.cs
+          tests/LancerNexus.Events.Tests/EventServiceCredentialAuthenticatorTests.cs
+          tests/LancerNexus.Events.Tests/MySqlEventStoreTests.cs
+      - run: dotnet build Events.sln --configuration Release --no-restore --warnaserror -p:UseSharedCompilation=false
+      - run: dotnet test Events.sln --configuration Release --no-build --logger trx
+      - run: dotnet restore Protocol/Protocol.sln
+      - run: dotnet format Protocol/Protocol.sln --verify-no-changes --no-restore --include Protocol/src/LancerNexus.Protocol/EventContracts.cs Protocol/src/LancerNexus.Protocol/FlHookEventContracts.cs Protocol/tests/LancerNexus.Protocol.Tests/EventContractsTests.cs Protocol/tests/LancerNexus.Protocol.Tests/FlHookEventContractsTests.cs
+      - run: dotnet build Protocol/Protocol.sln --configuration Release --no-restore --warnaserror
+      - run: dotnet test Protocol/Protocol.sln --configuration Release --no-build --logger trx --collect:"XPlat Code Coverage"

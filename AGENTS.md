@@ -29,3 +29,5 @@ Provide predictable lifecycle management for scheduled events and large battles.
 ## Verification
 
 Test registration races, event cancellation, late joins, full capacity, server failure, reconnects and return transfers.
+
+The current service solution is `Events.sln` (API plus tests). Build with `dotnet build Events.sln -c Release --no-restore --warnaserror -p:UseSharedCompilation=false`; run the full service tests against a disposable MySQL 8 server by setting `LANCER_NEXUS_EVENTS_TEST_MYSQL`. The MySQL fixture creates and drops an isolated random database and applies migrations in order. Gateway currently validates the session and lease before forwarding registration, but the live cross-service path has not been smoke-tested. Provisioning uses a durable Coordinator server assignment and a recovery worker; assigned-instance result acceptance and return-transfer support remain unimplemented.

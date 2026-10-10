@@ -1,0 +1,20 @@
+CREATE TABLE event_server_assignments (
+    event_id VARCHAR(96) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    event_revision BIGINT NOT NULL,
+    reservation_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    instance_id VARCHAR(96) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    target_system_id VARCHAR(96) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    endpoint VARCHAR(512) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    reserved_capacity SMALLINT UNSIGNED NOT NULL,
+    reservation_request_json JSON NOT NULL,
+    reservation_decision_json JSON NOT NULL,
+    released_at_utc DATETIME(6) NULL,
+    release_idempotency_key VARCHAR(96) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    created_at_utc DATETIME(6) NOT NULL,
+    updated_at_utc DATETIME(6) NOT NULL,
+    PRIMARY KEY (event_id),
+    UNIQUE KEY uq_event_server_assignments_reservation (reservation_id),
+    KEY ix_event_server_assignments_release (released_at_utc, event_id),
+    CONSTRAINT ck_event_server_assignments_revision CHECK (event_revision > 0),
+    CONSTRAINT ck_event_server_assignments_capacity CHECK (reserved_capacity BETWEEN 1 AND 200)
+) ENGINE=InnoDB;
